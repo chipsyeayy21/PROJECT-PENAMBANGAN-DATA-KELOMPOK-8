@@ -1,0 +1,304 @@
+/* ==========================================================================
+   10. HALAMAN EKSTRA (STOK CHECKLIST, METODOLOGI & TENTANG PROYEK)
+   ========================================================================== */
+.prep-summary-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+@media (min-width: 768px) {
+  .prep-summary-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+.prep-box {
+  background: var(--bg-cream);
+  border: 1px solid var(--border-warm);
+  border-radius: 13px;
+  padding: 13px 15px;
+}
+
+.prep-box-highlight {
+  background: linear-gradient(135deg, #ECFDF5 0%, #D1FAE5 100%);
+  border-color: #6EE7B7;
+}
+
+.prep-box-label {
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+}
+
+.prep-box-val {
+  font-size: 1.32rem;
+  font-weight: 800;
+  color: var(--text-roast);
+  margin-top: 3px;
+}
+
+.prep-box-highlight .prep-box-val {
+  color: var(--emerald-primary);
+}
+
+.prep-box-sub {
+  font-size: 11.5px;
+  color: var(--text-cocoa);
+  margin-top: 2px;
+}
+
+.stock-check-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.stock-check-item input[type="checkbox"] {
+  width: 17px;
+  height: 17px;
+  accent-color: var(--emerald-primary);
+  cursor: pointer;
+}
+
+.stock-row-checked td {
+  opacity: 0.55;
+  text-decoration: line-through;
+}
+
+.raw-materials-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+@media (min-width: 640px) {
+  .raw-materials-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .raw-materials-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+.raw-mat-card {
+  background: var(--bg-cream);
+  border: 1px solid var(--border-warm);
+  border-radius: 11px;
+  padding: 10px 12px;
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  font-size: 12px;
+}
+
+.raw-mat-card input[type="checkbox"] {
+  margin-top: 2px;
+  width: 16px;
+  height: 16px;
+  accent-color: var(--emerald-primary);
+  cursor: pointer;
+}
+
+.raw-mat-card.checked {
+  background: #ECFDF5;
+  border-color: #A7F3D0;
+}
+
+.formula-cards-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 14px;
+}
+
+@media (min-width: 900px) {
+  .formula-cards-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.method-card {
+  background: var(--bg-cream);
+  border: 1px solid var(--border-warm);
+  border-radius: 14px;
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.method-card-wide {
+  grid-column: 1 / -1;
+}
+
+.method-card-title {
+  font-size: 13.5px;
+  font-weight: 800;
+  color: var(--text-roast);
+}
+
+.method-eq {
+  background: #FFFFFF;
+  border: 1px solid var(--border-strong);
+  border-radius: 10px;
+  padding: 9px 12px;
+  font-family: Consolas, "Courier New", monospace;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--amber-deep);
+}
+
+.method-live {
+  background: #ECFDF5;
+  border: 1px solid #A7F3D0;
+  border-radius: 9px;
+  padding: 7px 11px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #065F46;
+}
+
+.method-desc {
+  font-size: 12.5px;
+  color: var(--text-cocoa);
+  line-height: 1.55;
+}
+
+.eda-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+  margin-top: 10px;
+}
+
+@media (min-width: 640px) {
+  .eda-stats-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+.eda-stat-pill {
+  background: #FFFFFF;
+  border: 1px solid var(--border-warm);
+  border-radius: 10px;
+  padding: 8px 10px;
+  font-size: 11.5px;
+}
+
+.eda-stat-pill span {
+  display: block;
+  color: var(--text-muted);
+  font-weight: 700;
+}
+
+.eda-stat-pill strong {
+  font-size: 13.5px;
+  color: var(--text-roast);
+}
+
+.about-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+}
+
+@media (min-width: 900px) {
+  .about-grid {
+    grid-template-columns: 1.3fr 1fr;
+  }
+}
+
+.problem-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.problem-item {
+  background: #FFFBEB;
+  border: 1px solid #FDE68A;
+  border-radius: 11px;
+  padding: 10px 13px;
+  font-size: 12.5px;
+  color: var(--text-espresso);
+}
+
+.problem-item strong {
+  color: var(--amber-deep);
+}
+
+.team-member-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.team-member-card {
+  background: var(--bg-cream);
+  border: 1px solid var(--border-warm);
+  border-radius: 11px;
+  padding: 10px 13px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  font-size: 12.5px;
+}
+
+.leader-tag {
+  display: inline-block;
+  background: var(--amber-toast);
+  color: #FFFFFF;
+  font-size: 10.5px;
+  font-weight: 800;
+  padding: 2px 7px;
+  border-radius: 6px;
+  margin-right: 6px;
+  text-transform: uppercase;
+}
+
+/* Toast Notification */
+.toast-box {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 3000;
+  background: var(--text-roast);
+  color: #FFFFFF;
+  padding: 11px 16px;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 700;
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.24);
+  border-left: 4px solid var(--amber-caramel);
+  max-width: 360px;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.toast-box.hidden {
+  opacity: 0;
+  transform: translateY(12px);
+  pointer-events: none;
+}
+
+.toast-success {
+  border-left-color: #10B981;
+}
+
+.toast-warning {
+  border-left-color: #F59E0B;
+}
+
+.toast-error {
+  border-left-color: #EF4444;
+}

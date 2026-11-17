@@ -1,0 +1,126 @@
+/* ==========================================================================
+   6. 4 KARTU KPI UTAMA
+   ========================================================================== */
+.kpi-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 14px;
+}
+
+@media (min-width: 640px) {
+  .kpi-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1080px) {
+  .kpi-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+.kpi-card {
+  background: #FFFFFF;
+  border: 1.5px solid var(--border-warm);
+  border-radius: var(--radius-lg);
+  padding: 16px 18px;
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.kpi-card-primary {
+  background: linear-gradient(135deg, #C86D1F 0%, #9A4A10 100%);
+  border-color: #9A4A10;
+  color: #FFFFFF;
+  box-shadow: 0 8px 20px rgba(200, 109, 31, 0.25);
+}
+
+.kpi-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.kpi-label {
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+}
+
+.kpi-card-primary .kpi-label {
+  color: #FDE68A;
+}
+
+.kpi-icon-badge {
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 14px;
+  background: var(--bg-sand);
+  color: var(--text-roast);
+  flex-shrink: 0;
+}
+
+.kpi-card-primary .kpi-icon-badge {
+  background: rgba(255, 255, 255, 0.18);
+  color: #FFFFFF;
+}
+
+.kpi-value {
+  font-size: 1.72rem;
+  font-weight: 800;
+  line-height: 1.15;
+  color: var(--text-roast);
+}
+
+.kpi-card-primary .kpi-value {
+  color: #FFFFFF;
+}
+
+.kpi-value-emerald {
+  color: var(--emerald-primary);
+}
+
+.kpi-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 6px;
+  font-size: 11.5px;
+  color: var(--text-muted);
+  padding-top: 8px;
+  border-top: 1px solid var(--border-warm);
+}
+
+.kpi-card-primary .kpi-footer {
+  color: #FDE68A;
+  border-top-color: rgba(255, 255, 255, 0.2);
+}
+
+.kpi-pill-dark {
+  background: rgba(0, 0, 0, 0.22);
+  color: #FFFFFF;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-weight: 800;
+  font-size: 11.5px;
+}
+
+.kpi-pill-warm {
+  background: var(--amber-soft);
+  color: var(--amber-deep);
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-weight: 800;
+  font-size: 11.5px;
+}

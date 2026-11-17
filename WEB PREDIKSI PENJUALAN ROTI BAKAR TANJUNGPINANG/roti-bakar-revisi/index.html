@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard Forecasting Penjualan Roti Bakar — Time Series Analysis</title>
+  <link rel="stylesheet" href="css/01-base-tokens.css" />
+  <link rel="stylesheet" href="css/02-header.css" />
+  <link rel="stylesheet" href="css/03-navigasi-menu.css" />
+  <link rel="stylesheet" href="css/04-layout-kontrol.css" />
+  <link rel="stylesheet" href="css/05-parameter-simulasi.css" />
+  <link rel="stylesheet" href="css/06-kpi.css" />
+  <link rel="stylesheet" href="css/07-grafik-svg.css" />
+  <link rel="stylesheet" href="css/08-rincian-stok.css" />
+  <link rel="stylesheet" href="css/09-tabel-form-aksi.css" />
+  <link rel="stylesheet" href="css/10-halaman-ekstra.css" />
+</head>
+<body>
+  <!-- Floating Tooltip for Interactive SVG Charts -->
+  <div id="chart-tooltip" class="svg-tooltip hidden" role="tooltip"></div>
+
+  <!-- Toast Notification Banner -->
+  <div id="toast-banner" class="toast-box hidden" role="status" aria-live="polite"></div>
+
+  <!-- Hidden CSV File Input -->
+  <input type="file" id="csv-file-input" accept=".csv,.txt" class="hidden" />
+
+  <!-- ========================================================================
+       1. HEADER IDENTITAS LAPORAN (BAB I & BAB II) & MITRA UMKM
+       ======================================================================== -->
+  <header class="hero-header">
+    <div class="container">
+      <div class="hero-top-row">
+        <div>
+          <div class="hero-badges">
+            <span class="hero-badge">Project Penambangan Data (CRISP-DM) &bull; Ganjil 2026–2027</span>
+            <span class="hero-badge">Mitra UMKM: Roti Bakar Khas Bandung — Tanjungpinang</span>
+            <span class="hero-badge">Narasumber: Mas Tian Bintang</span>
+          </div>
+          <h1 class="hero-title">
+            Forecasting Penjualan Harian dan Estimasi Permintaan Roti Bakar Menggunakan Time Series Analysis Berbasis Moving Average dan Pola Hari
+          </h1>
+          <p class="hero-subtitle">
+            Periode Pengamatan: 1 Juni – 31 Juli 2026 (61 Hari Kalender: 48 Hari Aktif &amp; 13 Hari Libur &bull; 1.496 Porsi &bull; Rp 22.131.000)
+          </p>
+        </div>
+
+        <div class="hero-team-box">
+          <div style="font-weight:800; color:#FDE68A; margin-bottom:4px;">Tim Penyusun Laporan:</div>
+          <div>&bull; <strong>2401020147</strong> – Misye Khalina Aprilia Marbun (Ketua)</div>
+          <div>&bull; <strong>2401020096</strong> – Elsha Natalia Panjaitan</div>
+          <div>&bull; <strong>2401020156</strong> – Nurfaizah Rasikha</div>
+          <div>&bull; <strong>2401020097</strong> – Neza Khairunnisa Rahmah</div>
+        </div>
+      </div>
+
+      <div class="hybrid-info-banner" role="note" aria-label="Skema Perhitungan Hybrid & Penanganan Data Bab II">
+        <span class="hybrid-badge">Skema Hybrid &amp; EDA Bab II</span>
+        <p class="hybrid-text">
+          <strong>13 hari libur</strong> dikeluarkan agar nilai nol tidak menurunkan ramalan keliru. <strong>Moving Average (SMA)</strong> dihitung kontinu lintas bulan (<strong>1 Juni – 31 Juli 2026</strong>), dilengkapi opsi <strong>Penanganan Pencilan (Outlier Capping Batas Atas IQR 54,4 porsi)</strong> sesuai implikasi Bab II ke Bab III.
+        </p>
+      </div>
+    </div>
+  </header>
+
+  <!-- ========================================================================
+       2. STICKY MULTI-MENU NAVIGATION BAR (6 MENU UTAMA)
+       ======================================================================== -->
+  <nav class="sticky-menu-bar" aria-label="Navigasi Utama Aplikasi">
+    <div class="container">
+      <div class="menu-tabs-scroll" role="tablist">
+        <button type="button" class="menu-tab-btn active" data-menu="dashboard" role="tab">
+          <span class="menu-num-pill">1</span>
+          <span>Dashboard Forecasting</span>
+        </button>
+        <button type="button" class="menu-tab-btn" data-menu="stok" role="tab">
+          <span class="menu-num-pill">2</span>
+          <span>Perencanaan Stok &amp; Menu</span>
+        </button>
+        <button type="button" class="menu-tab-btn" data-menu="rekap" role="tab">
+          <span class="menu-num-pill">3</span>
+          <span>Rekapitulasi &amp; Data Transaksi</span>
+        </button>
+        <button type="button" class="menu-tab-btn" data-menu="metodologi" role="tab">
+          <span class="menu-num-pill">4</span>
+          <span>Metodologi &amp; Rumus</span>
+        </button>
+        <button type="button" class="menu-tab-btn" data-menu="tentang" role="tab">
+          <span class="menu-num-pill">5</span>
+          <span>Tentang Proyek &amp; Mitra</span>
+        </button>
+        <button type="button" class="menu-tab-btn menu-tab-all" data-menu="all" role="tab">
+          <span>Tampilkan Semua</span>
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ========================================================================
+       3. KONTEN UTAMA APLIKASI
+       ======================================================================== -->
+  <main class="main-content">
+    <div class="container">
+      <div class="section-stack">
+
+        <!-- KONTROL GLOBAL: SKALA WAKTU, FILTER BULAN & PENANGANAN PENCILAN IQR -->
+        <section class="card" data-menu-groups="dashboard,stok,rekap" aria-label="Kontrol Skala Waktu, Filter Bulan, dan Outlier IQR">
+          <div class="nav-bar-grid">
+            <div class="scale-tabs-wrap">
+              <span class="control-label-mini">1. Pilih Skala Analisis Time Series</span>
+              <div class="scale-tabs-row" role="tablist">
+                <button type="button" class="scale-tab-btn active" data-scale="daily">Per-Hari (Days)</button>
+                <button type="button" class="scale-tab-btn" data-scale="weekly">Per-Minggu (Weeks)</button>
+                <button type="button" class="scale-tab-btn" data-scale="monthly">Per-Bulan (Months)</button>
+              </div>
+            </div>
+
+            <div class="global-month-box">
+              <div class="global-month-label">
+                <label for="global-month-select">2. Filter Bulan Global</label>
+                <span class="hybrid-tag-mini">SMA Kontinu Aktif</span>
+              </div>
+              <select id="global-month-select" class="form-select">
+                <option value="ALL" selected>Semua Bulan: Juni &amp; Juli 2026 (48 Hari)</option>
+                <option value="Juni">Juni 2026 (26 Hari • Rp 12.677.000)</option>
+                <option value="Juli">Juli 2026 (22 Hari • Rp 9.454.000)</option>
+              </select>
+            </div>
+
+            <div class="global-month-box">
+              <div class="global-month-label">
+                <label for="outlier-mode-select">3. Penanganan Pencilan (Outlier IQR)</label>
+                <span class="iqr-tag-mini" id="iqr-status-badge">Data Asli</span>
+              </div>
+              <select id="outlier-mode-select" class="form-select">
+                <option value="raw" selected>Data Aktual Asli (Tanpa Pembatasan)</option>
+                <option value="iqr_cap">Batas Atas IQR 54,4 Porsi (Capping 4 Hari Lonjakan)</option>
+              </select>
+            </div>
+          </div>
+        </section>
+
+        <!-- PANEL PARAMETER SIMULASI INTERAKTIF -->
+        <section class="card" data-menu-groups="dashboard" aria-label="Parameter Simulasi">
+          <div class="panel-header">
+            <div>
+              <h2 class="panel-title">
+                <span class="dot-amber"></span>
+                <span id="sim-panel-title">Parameter Per-Hari (Days) — Semua Bulan (Juni &amp; Juli 2026)</span>
+              </h2>
+              <p class="panel-subtitle" id="sim-panel-desc">
+                SMA-3 dihitung kontinu pada seluruh 48 hari aktif terlebih dahulu, lalu difilter tampilannya sesuai bulan terpilih (awal Juli tetap memiliki nilai SMA).
+              </p>
+            </div>
+            <span class="info-pill" id="sim-scope-badge">Tampilan: 48 Hari Aktif &bull; 1.496 Porsi (Rp 22.131.000)</span>
+          </div>
+
+          <!-- Kontrol 1: Mode Per-Hari -->
+          <div id="controls-daily" class="sim-controls-grid">
+            <div class="sim-box">
+              <label class="sim-box-label">1. Periode Simple Moving Average (SMA-N Hari)</label>
+              <div class="window-btn-group">
+                <button type="button" class="win-btn daily-win-btn active" data-n="3">3 Hari</button>
+                <button type="button" class="win-btn daily-win-btn" data-n="5">5 Hari</button>
+                <button type="button" class="win-btn daily-win-btn" data-n="7">7 Hari</button>
+                <button type="button" class="win-btn daily-win-btn" data-n="14">14 Hari</button>
+              </div>
+            </div>
+
+            <div class="sim-box">
+              <label for="target-day-select" class="sim-box-label">2. Hari Target Prediksi (Pembobotan Pola 7 Hari)</label>
+              <select id="target-day-select" class="form-select">
+                <option value="Senin" selected>Senin (Weekday • Rerata 31 porsi)</option>
+                <option value="Selasa">Selasa (Weekday Ramai • Rerata 38 porsi)</option>
+                <option value="Rabu">Rabu (Weekday Ramai • Rerata 36 porsi)</option>
+                <option value="Kamis">Kamis (Weekday Sepi • Rerata 22 porsi)</option>
+                <option value="Jumat">Jumat (Weekday Ramai • Rerata 34 porsi)</option>
+                <option value="Sabtu">Sabtu (Weekend Sepi • Rerata 24 porsi)</option>
+                <option value="Minggu">Minggu (Weekend Ramai • Rerata 34 porsi)</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Kontrol 2: Mode Per-Minggu -->
+          <div id="controls-weekly" class="sim-controls-grid hidden">
+            <div class="sim-box">
+              <label class="sim-box-label">1. Periode Weekly Moving Average (SMA-N Pekan)</label>
+              <div class="window-btn-group window-btn-group-3">
+                <button type="button" class="win-btn weekly-win-btn active" data-wn="2">2 Pekan</button>
+                <button type="button" class="win-btn weekly-win-btn" data-wn="3">3 Pekan</button>
+                <button type="button" class="win-btn weekly-win-btn" data-wn="4">4 Pekan</button>
+              </div>
+            </div>
+
+            <div class="sim-box">
+              <label for="weekly-open-days" class="sim-box-label">
+                2. Asumsi Hari Buka Pekan Depan: <span id="weekly-open-days-label" style="color:var(--amber-deep);">6 Hari</span>
+              </label>
+              <input type="range" id="weekly-open-days" class="range-slider" min="3" max="7" value="6" />
+              <div class="slider-ticks">
+                <span>3 Hari</span>
+                <span>Default: 6 Hari</span>
+                <span>7 Hari</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Kontrol 3: Mode Per-Bulan -->
+          <div id="controls-monthly" class="sim-controls-grid hidden">
+            <div class="sim-box">
+              <label for="monthly-method-select" class="sim-box-label">1. Metode Proyeksi Bulanan</label>
+              <select id="monthly-method-select" class="form-select">
+                <option value="sma2" selected>SMA-2 Bulanan (Juni &amp; Juli)</option>
+                <option value="daily_rate">Rata-rata Harian &times; Target Hari Buka</option>
+              </select>
+            </div>
+
+            <div class="sim-box">
+              <label for="monthly-open-days" class="sim-box-label">
+                2. Target Hari Buka Agustus 2026: <span id="monthly-open-days-label" style="color:var(--amber-deep);">24 Hari</span>
+              </label>
+              <input type="range" id="monthly-open-days" class="range-slider" min="20" max="30" value="24" />
+              <div class="slider-ticks">
+                <span>20 Hari</span>
+                <span>Default: 24 Hari</span>
+                <span>30 Hari</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- 4 KARTU KPI UTAMA -->
+        <section class="kpi-grid" data-menu-groups="dashboard" aria-label="Ringkasan KPI Proyeksi">
+          <div class="kpi-card kpi-card-primary">
+            <div class="kpi-top">
+              <span class="kpi-label" id="kpi1-label">PROYEKSI PORSI HARIAN (SENIN)</span>
+              <span class="kpi-icon-badge">&#8599;</span>
+            </div>
+            <div class="kpi-value" id="kpi1-value">35 Porsi</div>
+            <div class="kpi-footer">
+              <span id="kpi1-sub-left">Indeks Pola Hari (Senin):</span>
+              <span class="kpi-pill-dark" id="kpi1-sub-right">1,01x</span>
+            </div>
+          </div>
+
+          <div class="kpi-card">
+            <div class="kpi-top">
+              <span class="kpi-label" id="kpi2-label">PROYEKSI OMZET HARIAN (RP)</span>
+              <span class="kpi-icon-badge" style="background:var(--emerald-soft); color:var(--emerald-primary);">$</span>
+            </div>
+            <div class="kpi-value kpi-value-emerald" id="kpi2-value">Rp 517.771</div>
+            <div class="kpi-footer">
+              <span id="kpi2-sub-left">Harga rata-rata/porsi:</span>
+              <strong id="kpi2-sub-right" style="color:var(--text-roast);">Rp 14.793</strong>
+            </div>
+          </div>
+
+          <div class="kpi-card">
+            <div class="kpi-top">
+              <span class="kpi-label" id="kpi3-label">NILAI DASAR SMA-3 (KONTINU)</span>
+              <span class="kpi-icon-badge">&#9636;</span>
+            </div>
+            <div class="kpi-value" id="kpi3-value">35,00 Porsi</div>
+            <div class="kpi-footer">
+              <span id="kpi3-sub-left">Rata-rata tampilan:</span>
+              <span class="kpi-pill-warm" id="kpi3-sub-right">31,17 porsi/hr</span>
+            </div>
+          </div>
+
+          <div class="kpi-card">
+            <div class="kpi-top">
+              <span class="kpi-label" id="kpi4-label">EVALUASI AKURASI (MAPE %)</span>
+              <span class="kpi-icon-badge">&#10003;</span>
+            </div>
+            <div class="kpi-value" id="kpi4-value">32,5%</div>
+            <div class="kpi-footer">
+              <span id="kpi4-sub-left">MAE &amp; RMSE:</span>
+              <strong id="kpi4-sub-right" style="color:var(--text-roast);">MAE 9,81 | RMSE 13,40</strong>
+            </div>
+          </div>
+        </section>
+
+        <!-- 2 GRAFIK SVG INTERAKTIF -->
+        <section class="charts-grid" data-menu-groups="dashboard" aria-label="Grafik Time Series dan Pola Hari">
+          <div class="card">
+            <div class="panel-header" style="margin-bottom:4px;">
+              <div>
+                <h3 class="chart-title" id="chart1-title">Tren Penjualan Aktual vs Moving Average</h3>
+                <p class="panel-subtitle" id="chart1-subtitle">Perbandingan volume harian (porsi), garis SMA-3, dan titik proyeksi hari berikutnya.</p>
+              </div>
+              <span class="info-pill" id="chart1-badge">48 Hari Data</span>
+            </div>
+            <div class="chart-legend" id="chart1-legend"></div>
+            <div class="svg-wrapper" id="chart1-container"></div>
+          </div>
+
+          <div class="card">
+            <div class="panel-header" style="margin-bottom:4px;">
+              <div>
+                <h3 class="chart-title" id="chart2-title">Pola Musiman per Hari (Senin – Minggu)</h3>
+                <p class="panel-subtitle" id="chart2-subtitle">Rata-rata penjualan &amp; indeks pengali hari. Hari target (Senin) disorot emas.</p>
+              </div>
+              <span class="info-pill" id="chart2-badge">Indeks Hari</span>
+            </div>
+            <div class="chart-legend" id="chart2-legend"></div>
+            <div class="svg-wrapper" id="chart2-container"></div>
+          </div>
+        </section>
+
+        <!-- RINCIAN PERHITUNGAN MATEMATIS & REKOMENDASI STOK + 8 VARIAN TERLARIS -->
+        <section class="insights-grid" data-menu-groups="dashboard" aria-label="Detail Perhitungan dan Rekomendasi Stok">
+          <div class="card">
+            <h3 class="chart-title">&Sigma; Rincian Perhitungan Matematis</h3>
+            <p class="panel-subtitle">Transparansi kalkulasi Time Series &amp; 3 metrik akurasi laporan (MAE, RMSE, MAPE)</p>
+            <div class="math-rows" id="math-details-container"></div>
+          </div>
+
+          <div class="card">
+            <h3 class="chart-title">Rekomendasi Persiapan Stok &amp; 8 Varian Terlaris</h3>
+            <p class="panel-subtitle">Proporsi belanja setelah penyeragaman 38 varian pada Bab II (1.496 porsi)</p>
+
+            <div class="stock-banner">
+              <div>
+                <div class="stock-banner-label" id="stock-banner-title">TOTAL ROTI TAWAR DISIAPKAN (+10% SAFETY STOCK)</div>
+                <div class="stock-banner-sub" id="stock-banner-sub">Proyeksi dasar 35 porsi + 4 porsi cadangan aman</div>
+              </div>
+              <div class="stock-banner-qty" id="stock-banner-qty">39 tangkup</div>
+            </div>
+
+            <div class="variants-grid" id="top-variants-grid"></div>
+
+            <div class="other-variants-bar">
+              <span>30 Varian Kombinasi Lainnya (<strong>47,1%</strong> dari total transaksi):</span>
+              <strong id="other-variants-qty" style="color:var(--text-roast);">18 tangkup</strong>
+            </div>
+
+            <div style="margin-top:12px; display:flex; flex-wrap:wrap; gap:8px; justify-content:flex-end;">
+              <button type="button" class="btn btn-amber-outline" data-jump-menu="metodologi">Buka Rumus &amp; Metodologi &rarr;</button>
+              <button type="button" class="btn btn-emerald" data-jump-menu="stok">Buka Kalkulator &amp; Checklist Stok &rarr;</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- ====================================================================
+             MENU 2: PERENCANAAN STOK & MENU (KALKULATOR OPERASIONAL MAS TIAN)
+             ==================================================================== -->
+        <section class="card" data-menu-groups="stok" aria-label="Perencanaan Stok dan Menu Operasional">
+          <div class="dataset-header-bar">
+            <div>
+              <h3 class="chart-title" style="font-size:1.12rem;">
+                Kalkulator Operasional Persiapan Stok &amp; Alokasi Varian (Mas Tian Bintang)
+              </h3>
+              <p class="panel-subtitle">
+                Otomatis mengikuti hasil proyeksi aktif ditambah <strong>+10% Safety Stock</strong> (pembulatan ke atas) sesuai proporsi <strong>38 varian terstandarisasi Bab II</strong> (Cokelat muncul di 43,1% porsi &amp; Keju di 38,8% porsi).
+              </p>
+            </div>
+            <div class="action-buttons-row">
+              <button type="button" id="copy-shopping-list-btn" class="btn btn-emerald">
+                Salin Daftar Belanja ke Clipboard
+              </button>
+            </div>
+          </div>
+
+          <div class="prep-summary-grid">
+            <div class="prep-box">
+              <div class="prep-box-label">Proyeksi Permintaan Dasar</div>
+              <div class="prep-box-val" id="stok-page-base">35 Porsi</div>
+              <div class="prep-box-sub" id="stok-page-scope">Skala Per-Hari (Senin)</div>
+            </div>
+            <div class="prep-box">
+              <div class="prep-box-label">Cadangan Aman (+10% Safety Stock)</div>
+              <div class="prep-box-val" id="stok-page-extra">+4 Tangkup</div>
+              <div class="prep-box-sub">Pembulatan ke atas mencegah <em>lost sales</em></div>
+            </div>
+            <div class="prep-box prep-box-highlight">
+              <div class="prep-box-label">Total Roti Tawar Disiapkan</div>
+              <div class="prep-box-val" id="stok-page-total">39 Tangkup</div>
+              <div class="prep-box-sub">Total porsi siap jual optimal</div>
+            </div>
+            <div class="prep-box">
+              <div class="prep-box-label">Estimasi Kebutuhan Bungkus Roti</div>
+              <div class="prep-box-val" id="stok-page-packs">4 Bungkus</div>
+              <div class="prep-box-sub">Asumsi 10 porsi per bungkus roti Bandung</div>
+            </div>
+          </div>
+
+          <div class="table-scroll-container">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th style="width:48px;">Cek</th>
+                  <th>Peringkat</th>
+                  <th>Varian Rasa Roti Bakar (Terstandarisasi)</th>
+                  <th class="text-right">Proporsi Bab II</th>
+                  <th class="text-right">Proyeksi Dasar</th>
+                  <th class="text-right">Target Siap Jual (+10%)</th>
+                  <th>Komposisi Selai / Topping</th>
+                </tr>
+              </thead>
+              <tbody id="stok-checklist-tbody"></tbody>
+            </table>
+          </div>
+
+          <div style="margin-top:18px;">
+            <h4 style="font-size:13.5px; font-weight:800; color:var(--text-roast); margin-bottom:4px;">
+              Checklist Belanja Bahan Baku Harian / Mingguan (Prioritas Topping Bab II)
+            </h4>
+            <p class="panel-subtitle">Centang bahan baku yang sudah tersedia atau selesai dibeli sebelum kedai dibuka:</p>
+            <div class="raw-materials-grid" id="raw-materials-grid">
+              <label class="raw-mat-card"><input type="checkbox" class="raw-mat-cb" /><div><strong>Roti Tawar Bandung</strong><div style="color:var(--text-muted);" id="raw-mat-roti">4 bungkus (39 porsi)</div></div></label>
+              <label class="raw-mat-card"><input type="checkbox" class="raw-mat-cb" /><div><strong>Cokelat Meises (Prioritas #1)</strong><div style="color:var(--text-muted);">Muncul pada 43,1% seluruh porsi terjual</div></div></label>
+              <label class="raw-mat-card"><input type="checkbox" class="raw-mat-cb" /><div><strong>Keju Cheddar Parut (Prioritas #2)</strong><div style="color:var(--text-muted);">Muncul pada 38,8% seluruh porsi terjual</div></div></label>
+              <label class="raw-mat-card"><input type="checkbox" class="raw-mat-cb" /><div><strong>Selai Blueberry</strong><div style="color:var(--text-muted);">Varian #3, #4, dan #5 terlaris (17,4% gabungan)</div></div></label>
+              <label class="raw-mat-card"><input type="checkbox" class="raw-mat-cb" /><div><strong>Selai Srikaya</strong><div style="color:var(--text-muted);">Srikaya Polos peringkat #6 (5,5% / 82 porsi)</div></div></label>
+              <label class="raw-mat-card"><input type="checkbox" class="raw-mat-cb" /><div><strong>Selai Strawberry</strong><div style="color:var(--text-muted);">Strawberry + Keju peringkat #7 (5,3% / 80 porsi)</div></div></label>
+              <label class="raw-mat-card"><input type="checkbox" class="raw-mat-cb" /><div><strong>Selai Kacang Tanah</strong><div style="color:var(--text-muted);">Kacang + Cokelat peringkat #8 (4,9% / 74 porsi)</div></div></label>
+              <label class="raw-mat-card"><input type="checkbox" class="raw-mat-cb" /><div><strong>Margarin &amp; Susu Kental Manis</strong><div style="color:var(--text-muted);">Bahan dasar olesan panggang 35 menu resmi</div></div></label>
+            </div>
+          </div>
+        </section>
+
+        <!-- ====================================================================
+             MENU 3: REKAPITULASI & DATA TRANSAKSI (FULL-WIDTH STACKED)
+             ==================================================================== -->
+        <section class="card" data-menu-groups="rekap" aria-label="Rekapitulasi dan Manajemen Data Transaksi">
+          <div class="dataset-header-bar">
+            <div>
+              <h3 class="chart-title" style="font-size:1.12rem;">Rekapitulasi Dataset Transaksi Harian (1 Juni – 31 Juli 2026)</h3>
+              <p class="panel-subtitle">Kelola data historis 48 hari aktif, impor CSV baru, atau ekspor hasil perhitungan ke file CSV.</p>
+            </div>
+            <div class="action-buttons-row">
+              <button type="button" id="import-csv-btn" class="btn btn-dark">Import Excel / CSV</button>
+              <button type="button" id="export-csv-btn" class="btn btn-emerald">Export Hasil CSV</button>
+              <button type="button" id="reset-data-btn" class="btn btn-amber-outline">Reset Awal (48 Hari)</button>
+            </div>
+          </div>
+
+          <div class="holiday-note-box">
+            <strong>Catatan Kualitas Data Bab II:</strong> Dari 61 hari kalender (1 Juni – 31 Juli 2026), terdapat <strong>48 hari aktif</strong> dan <strong>13 hari libur (21,3%)</strong> yang dikeluarkan dari perhitungan SMA (<strong>4 hari di Juni:</strong> 8, 15, 17, 24 Juni; <strong>9 hari di Juli:</strong> 1, 6, 8, 11, 15, 22, 23, 28, 31 Juli). Terdapat <strong>4 hari pencilan di atas batas atas IQR (54,4 porsi / Rp 791.750)</strong> yaitu 30 Juni (75), 12 Juni (63), 16 Juni (60), dan 7 Juni (55 porsi).
+          </div>
+
+          <!-- Form Tambah / Update Transaksi Harian -->
+          <div class="crud-form-box">
+            <div style="font-size:12.5px; font-weight:800; color:var(--text-roast); margin-bottom:9px;">
+              Tambah / Update Transaksi Harian (Otomatis Memperbarui Seluruh Perhitungan)
+            </div>
+            <form id="transaction-form" class="crud-grid">
+              <div>
+                <label for="input-date" class="control-label-mini" style="display:block; margin-bottom:4px;">Tanggal Transaksi</label>
+                <input type="date" id="input-date" class="form-input" value="2026-08-01" required />
+              </div>
+              <div>
+                <label for="input-porsi" class="control-label-mini" style="display:block; margin-bottom:4px;">Jumlah Terjual (Porsi)</label>
+                <input type="number" id="input-porsi" class="form-input" min="1" max="500" placeholder="Contoh: 34" required />
+              </div>
+              <div>
+                <label for="input-omzet" class="control-label-mini" style="display:block; margin-bottom:4px;">Total Omzet Rp (Opsional, otomatis Rp 14.793/porsi)</label>
+                <input type="number" id="input-omzet" class="form-input" min="0" step="1000" placeholder="Otomatis jika dikosongkan" />
+              </div>
+              <div>
+                <button type="submit" class="btn btn-emerald" style="width:100%; height:40px;">+ Simpan Data</button>
+              </div>
+            </form>
+          </div>
+
+          <!-- Tab Pilihan Tabel Rekapitulasi -->
+          <div class="table-tabs-bar">
+            <div class="table-tab-group" role="tablist">
+              <button type="button" class="tbl-tab-btn active" data-tblview="daily">Tabel Harian (48 Hari)</button>
+              <button type="button" class="tbl-tab-btn" data-tblview="weekly">Rekap Mingguan Kontinu (Pekan 1–9)</button>
+              <button type="button" class="tbl-tab-btn" data-tblview="monthly">Rekap Bulanan (Juni &amp; Juli)</button>
+            </div>
+            <span class="info-pill" id="table-scope-info">Menampilkan 48 baris data aktif</span>
+          </div>
+
+          <div class="table-scroll-container">
+            <table class="data-table">
+              <thead id="table-head"></thead>
+              <tbody id="table-body"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- ====================================================================
+             MENU 4: METODOLOGI & 5 RUMUS TIME SERIES ANALYSIS (BAB I & BAB II)
+             ==================================================================== -->
+        <section class="card" data-menu-groups="metodologi" aria-label="Metodologi dan Rumus Perhitungan">
+          <div class="panel-header">
+            <div>
+              <h3 class="chart-title" style="font-size:1.12rem;">
+                Metodologi CRISP-DM &amp; 5 Rumus Matematis Utama (Bab I &amp; Bab II)
+              </h3>
+              <p class="panel-subtitle">
+                Dokumentasi rumus sesuai laporan <strong>Time Series Analysis berbasis Moving Average dan Pola Hari</strong> yang terhubung langsung dengan angka simulasi aktif.
+              </p>
+            </div>
+            <span class="info-pill">Kerangka Kerja: CRISP-DM (6 Tahap)</span>
+          </div>
+
+          <div class="formula-cards-grid">
+            <div class="method-card">
+              <div class="method-card-title">1. Rumus Simple Moving Average (SMA-N)</div>
+              <div class="method-eq">SMA_t = (Y_{t-1} + Y_{t-2} + ... + Y_{t-N}) / N</div>
+              <div class="method-live" id="met-live-sma">Nilai Aktif: SMA-3 Harian = 35,00 porsi</div>
+              <p class="method-desc">
+                Menghitung rata-rata pergerakan penjualan aktual dari <em>N</em> hari operasional terakhir sebelum hari target <em>t</em>. Sebanyak <strong>13 hari libur</strong> dikeluarkan agar nilai nol tidak menurunkan hasil peramalan secara keliru.
+              </p>
+            </div>
+
+            <div class="method-card">
+              <div class="method-card-title">2. Rumus Indeks Pola Hari (Day-of-Week Patterning)</div>
+              <div class="method-eq">I_d = Rata-rata Hari d (Ȳ_d) / Rata-rata Keseluruhan (Ȳ_total)</div>
+              <div class="method-live" id="met-live-index">Nilai Aktif: I_Senin = 1,01x (Rerata total: 31,17 porsi/hr)</div>
+              <p class="method-desc">
+                Sesuai temuan <strong>Bab II Subbab 2.3</strong>, pembagian <em>weekday</em> (rerata Rp 470.636) vs <em>weekend</em> (Rp 440.000) kurang tegas, sehingga digunakan indeks 7 hari: Selasa tertinggi (38 porsi), diikuti Rabu (36), Jumat &amp; Minggu (34), Senin (31), Sabtu (24), dan Kamis terendah (22 porsi).
+              </p>
+            </div>
+
+            <div class="method-card">
+              <div class="method-card-title">3. Rumus Proyeksi Permintaan &amp; Penanganan Pencilan IQR</div>
+              <div class="method-eq">Ŷ_{t+1}^{(d)} = round(SMA_t &times; I_d) &nbsp;|&nbsp; Upper_IQR = Q3 + 1,5 &times; (Q3 - Q1)</div>
+              <div class="method-live" id="met-live-forecast">Proyeksi Aktif: Harian (Senin) = 35 Porsi</div>
+              <p class="method-desc">
+                Berdasarkan <strong>Bab II</strong>, terdapat 4 hari pencilan di atas batas atas IQR (<strong>54,4 porsi / Rp 791.750</strong>), yakni 30 Jun (75), 12 Jun (63), 16 Jun (60), dan 7 Jun (55 porsi). Aktifkan opsi <strong>Capping Batas Atas IQR</strong> di kontrol atas untuk membatasi lonjakan ekstrem saat melatih model.
+              </p>
+            </div>
+
+            <div class="method-card">
+              <div class="method-card-title">4. Rumus Estimasi Omzet &amp; Safety Stock (+10%)</div>
+              <div class="method-eq">Ô_t = Ŷ_t &times; P̄ &nbsp;&nbsp;|&nbsp;&nbsp; Stok_Siap_Jual = &lceil; Ŷ_t &times; 1,10 &rceil;</div>
+              <div class="method-live" id="met-live-stock">Nilai Aktif: Omzet Rp 517.771 &bull; Stok +10% = 39 tangkup</div>
+              <p class="method-desc">
+                Jumlah porsi dan omzet memiliki korelasi hampir sempurna (<strong>r = 0,999</strong>) dengan rata-rata harga <code>P̄ = Rp 22.131.000 / 1.496 = Rp 14.793/porsi</code>. Tambahan 10% mencegah <em>lost sales</em> pada hari ramai.
+              </p>
+            </div>
+
+            <div class="method-card method-card-wide">
+              <div class="method-card-title">5. Rumus Evaluasi Akurasi Model Lengkap (MAE, RMSE, dan MAPE — Bab I Subbab 1.3)</div>
+              <div class="method-eq">
+                MAE = (1/n) &Sigma; |Y_t - Ŷ_t| &nbsp;&nbsp;&bull;&nbsp;&nbsp;
+                RMSE = &radic;[(1/n) &Sigma; (Y_t - Ŷ_t)&sup2;] &nbsp;&nbsp;&bull;&nbsp;&nbsp;
+                MAPE = (100%/n) &Sigma; |(Y_t - Ŷ_t) / Y_t|
+              </div>
+              <div class="method-live" id="met-live-acc">Evaluasi Aktif: MAE = 9,81 porsi &bull; RMSE = 13,40 porsi &bull; MAPE = 32,5%</div>
+              <p class="method-desc">
+                <strong>Penjelasan 3 Metrik Evaluasi:</strong> <strong>MAE</strong> mengukur rata-rata selisih absolut dalam satuan porsi; <strong>RMSE</strong> memberikan penalti lebih besar pada kesalahan prediksi yang lebar (seperti saat hari lonjakan pencilan); dan <strong>MAPE</strong> mengukur persentase kesalahan relatif terhadap penjualan aktual.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <!-- ====================================================================
+             MENU 5: TENTANG PROYEK & PROFIL MITRA UMKM (BAB I & BAB II EDA)
+             ==================================================================== -->
+        <section class="card" data-menu-groups="tentang" aria-label="Tentang Proyek dan Mitra UMKM">
+          <div class="panel-header">
+            <div>
+              <h3 class="chart-title" style="font-size:1.12rem;">
+                Tentang Proyek Penambangan Data &amp; Temuan EDA Mitra UMKM
+              </h3>
+              <p class="panel-subtitle">
+                Dokumentasi <strong>Bab I (Business Understanding)</strong> dan <strong>Bab II (Data Understanding)</strong> — Project Penambangan Data (Ganjil 2026–2027).
+              </p>
+            </div>
+            <span class="info-pill">Periode: 1 Juni – 31 Juli 2026 (48 Hari Aktif)</span>
+          </div>
+
+          <div class="about-grid">
+            <div>
+              <h4 style="font-size:13.5px; font-weight:800; color:var(--text-roast); margin-bottom:6px;">
+                Latar Belakang &amp; Permasalahan Mitra (Bab I)
+              </h4>
+              <p style="font-size:12.5px; color:var(--text-cocoa); line-height:1.6;">
+                Mitra sumber data adalah UMKM kuliner <strong>Roti Bakar Khas Bandung</strong> di <strong>Tanjungpinang</strong> dengan pencatatan transaksi harian oleh <strong>Mas Tian Bintang</strong>. Karena produk kuliner memiliki daya simpan terbatas, ketidakpastian permintaan harian menimbulkan tiga kendala operasional:
+              </p>
+              <div class="problem-list">
+                <div class="problem-item">
+                  <strong>1. Kerugian Sisa Bahan Baku (Food Waste):</strong> Penyiapan stok roti dan adonan berlebihan pada hari-hari sepi (seperti Kamis yang rata-rata hanya 22 porsi).
+                </div>
+                <div class="problem-item">
+                  <strong>2. Kehilangan Potensi Pendapatan (Lost Sales):</strong> Persediaan bahan baku kurang pada hari-hari ramai (seperti Selasa, Rabu, Jumat, dan Minggu) sehingga porsi habis sebelum jam tutup.
+                </div>
+                <div class="problem-item">
+                  <strong>3. Perencanaan Manual Berbasis Intuisi:</strong> Estimasi belanja bahan baku harian masih dilakukan secara manual tanpa memanfaatkan histori data transaksi.
+                </div>
+              </div>
+
+              <h4 style="font-size:13.5px; font-weight:800; color:var(--text-roast); margin:14px 0 4px;">
+                Ringkasan Statistik Eksplorasi Data (EDA Bab II Subbab 2.3)
+              </h4>
+              <div class="eda-stats-grid">
+                <div class="eda-stat-pill"><span>Rata-rata / Hari</span><strong>31,2 porsi (Rp 461.063)</strong></div>
+                <div class="eda-stat-pill"><span>Median &amp; IQR</span><strong>Med 28 | Q1 23,8 | Q3 36</strong></div>
+                <div class="eda-stat-pill"><span>Min &amp; Maks</span><strong>11 (9 Jul) – 75 (30 Jun)</strong></div>
+                <div class="eda-stat-pill"><span>Korelasi &amp; Varian</span><strong>r = 0,999 | 38 Varian</strong></div>
+              </div>
+            </div>
+
+            <div>
+              <h4 style="font-size:13.5px; font-weight:800; color:var(--text-roast); margin-bottom:6px;">
+                Identitas Mitra &amp; Tim Penyusun
+              </h4>
+              <div class="prep-box" style="margin-bottom:12px;">
+                <div class="prep-box-label">Mitra Usaha UMKM &amp; Rekapitulasi Bulanan</div>
+                <div style="font-size:14px; font-weight:800; color:var(--text-roast); margin-top:4px;">
+                  Roti Bakar Khas Bandung — Tanjungpinang
+                </div>
+                <div style="font-size:12.5px; color:var(--text-cocoa); margin-top:4px; line-height:1.55;">
+                  Pegawai Pengelola Data: <strong>Mas Tian Bintang</strong><br />
+                  Menu Resmi: <strong>35 varian</strong> (Rp 12.000 – Rp 22.000; 38 varian terstandarisasi)<br />
+                  <strong>Juni 2026:</strong> 26 hari aktif &bull; 859 porsi &bull; <strong>Rp 12.677.000</strong><br />
+                  <strong>Juli 2026:</strong> 22 hari aktif &bull; 637 porsi &bull; <strong>Rp 9.454.000</strong>
+                </div>
+              </div>
+
+              <div class="team-member-list">
+                <div class="team-member-card" style="background:#FEF3C7; border-color:#FCD34D;">
+                  <div>
+                    <span class="leader-tag">Ketua</span>
+                    <strong>Misye Khalina Aprilia Marbun</strong>
+                  </div>
+                  <strong style="font-family:Consolas, monospace; color:var(--amber-deep);">2401020147</strong>
+                </div>
+                <div class="team-member-card">
+                  <span><strong>Elsha Natalia Panjaitan</strong> (Anggota)</span>
+                  <span style="font-family:Consolas, monospace; font-weight:700; color:var(--text-muted);">2401020096</span>
+                </div>
+                <div class="team-member-card">
+                  <span><strong>Nurfaizah Rasikha</strong> (Anggota)</span>
+                  <span style="font-family:Consolas, monospace; font-weight:700; color:var(--text-muted);">2401020156</span>
+                </div>
+                <div class="team-member-card">
+                  <span><strong>Neza Khairunnisa Rahmah</strong> (Anggota)</span>
+                  <span style="font-family:Consolas, monospace; font-weight:700; color:var(--text-muted);">2401020097</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+      </div>
+    </div>
+  </main>
+
+  <!-- ========================================================================
+       4. JAVASCRIPT ENGINE (100% OFFLINE VANILLA JS + INLINE SVG CHARTS)
+       ======================================================================== -->
+  <script src="js/01-dataset.js"></script>
+  <script src="js/02-helper-storage.js"></script>
+  <script src="js/03-state-aplikasi.js"></script>
+  <script src="js/04-toast-tooltip.js"></script>
+  <script src="js/05-engine-forecasting.js"></script>
+  <script src="js/06-grafik-svg.js"></script>
+  <script src="js/07-tabel-menu-ekstra.js"></script>
+  <script src="js/08-render-orkestrator.js"></script>
+  <script src="js/09-event-listeners.js"></script>
+</body>
+</html>
